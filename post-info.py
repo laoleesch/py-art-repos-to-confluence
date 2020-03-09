@@ -5,19 +5,9 @@ from getpass import getpass
 import requests
 import urllib3
 from collections import defaultdict
-# import jinja2
+from jinja2 import Environment, FileSystemLoader
 
-
-class VirtRepo:
-    def __init__(self, name, url):
-        self.name = name
-        self.url = url
-        self.repos = list()
-    
-    def append(self, url):
-        if url not in self.repos:
-            self.repos.append(url)
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 urllib3.disable_warnings() # disable ssl varnings :)
 
 wiki_url = os.getenv('WIKI_URL') #export WIKI_URL=https://wiki.x5.ru
@@ -43,7 +33,7 @@ confluence = Confluence(
     verify_ssl=False) # TODO ssl verify
 
 wiki_page = confluence.get_page_by_id(page_id=wiki_page_id, expand='body.editor')
-curr_content = wiki_page['body']['editor']['value']
+# curr_content = wiki_page['body']['editor']['value']
 
 resp = requests.get(art_url + '/api/repositories', verify=False) # TODO ssl verify
 resp.raise_for_status()
@@ -74,5 +64,12 @@ for vname, vrep in virt_repos.items():
 for _, rrep in remote_repos.items():
     all_repos.setdefault(rrep['packageType'], {})[art_url + '/' + rrep['key']] = [rrep['url']]
 
-# print(all_repos) 
+# generate page from template
 
+jinja2_env = Environment(loader=FileSystemLoader(BASE_DIR), trim_blocks=True)
+new_content = jinja2_env.get_template('page_template.html').render(all_repos=all_repos)
+
+# post page on wiki
+confluence.update_page(wiki_page_id,wiki_page['title'],new_content)
+
+print('Done')

@@ -1,0 +1,23 @@
+<p>
+    <h1>REPOS:</h1>
+    <table>
+        <tr>
+            <td>Repo Type</td>
+            <td>Url</td>
+            <td>Remote repos</td>
+        </tr>
+        {% for type, repos in all_repos.items() %}
+            {% for url, remotes in repos.items() %}
+        <tr>
+            <td>{{ type }}</td>
+            <td>{{ url }}</td>
+            <td><ul>
+                {% for remote in remotes%}
+                <li>{{ remote }}</li>
+                {% endfor %}
+            </ul></td>
+        </tr>
+            {% endfor %}
+        {% endfor %}
+    </table>
+</p>
