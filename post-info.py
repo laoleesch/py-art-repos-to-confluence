@@ -49,18 +49,30 @@ resp = requests.get(art_url + '/api/repositories', verify=False) # TODO ssl veri
 resp.raise_for_status()
 repositories = resp.json()
 
-virt_repos = defaultdict(list)
+# get all virt and remote repos
+virt_repos = dict()
+remote_repos = dict()
 for rep in repositories:
     if rep['type'] == 'VIRTUAL':
-        vrepo = VirtRepo(name=rep['key'], url=rep['url'])
-        resp = requests.get(art_url + '/api/repositories/' + rep['key'], verify=False) # TODO ssl verify
-        resp.raise_for_status()
-        for irep in resp.json()['repositories']:
-            resp = requests.get(art_url + '/api/repositories/' + irep, verify=False) # TODO ssl verify
-            resp.raise_for_status()
-            if resp.json()['rclass'] == 'remote':
-                vrepo.append(resp.json()['url'])
-        virt_repos[rep['packageType']].append(vrepo)
-    # elif rep['type'] == 'REMOTE':
-# print(virt_repos)
+        virt_repos[rep['key']] = rep
+    elif rep['type'] == 'REMOTE':
+        remote_repos[rep['key']] = rep
+
+# from all virt repos pop remote repos
+all_repos = dict(dict(list()))
+for vname, vrep in virt_repos.items():
+    resp = requests.get(art_url + '/api/repositories/' + vname, verify=False) # TODO ssl verify
+    resp.raise_for_status()
+    remotes = list()
+    for irep in resp.json()['repositories']:
+        if irep in remote_repos.keys():
+            remotes.append(remote_repos[irep]['url'])
+            del remote_repos[irep]
+    all_repos.setdefault(vrep['packageType'], {})[vrep['url']] = remotes
+
+# get all remained remote repos
+for _, rrep in remote_repos.items():
+    all_repos.setdefault(rrep['packageType'], {})[art_url + '/' + rrep['key']] = [rrep['url']]
+
+# print(all_repos) 
 
