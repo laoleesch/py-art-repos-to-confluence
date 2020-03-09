@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 urllib3.disable_warnings() # disable ssl varnings :)
 
-wiki_url = os.getenv('WIKI_URL') #export WIKI_URL=https://wiki.x5.ru
+wiki_url = os.getenv('WIKI_URL')
 if wiki_url is None:
     wiki_url = input("Wiki url: ")
 wiki_username = os.getenv('WIKI_USER')
